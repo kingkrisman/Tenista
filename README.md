@@ -103,14 +103,63 @@ which you can delete outright for a little more headroom.
 Judge speed from `npm run preview`, not `npm run dev`: StrictMode double-renders every
 component in development and Vite serves Framer Motion unminified.
 
+## Node version
+
+**This project needs Node 20.19+ or 22.12+.** Not a style preference — Vite 8 builds
+through rolldown, which ships as a native binary per platform, and every one of those
+binaries declares `engines: ^20.19.0 || >=22.12.0`. npm installs them as optional
+dependencies, and it *skips optional dependencies whose engine check fails, silently*.
+On Node 22.11 you therefore get a successful `npm install` and then:
+
+```
+Error: Cannot find native binding.
+```
+
+The message blames an npm bug and tells you to wipe `node_modules`. That is a red
+herring here — reinstalling changes nothing, because the binary is being filtered out
+on purpose. Upgrade Node and it resolves. `engines.node` in `package.json` pins the
+same floor for Vercel.
+
+This machine runs Node through [fnm](https://github.com/Schniz/fnm), installed per-user
+with no admin rights. `.node-version` in this folder pins the major, and the PowerShell
+profile at `Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1` switches to it
+on `cd`:
+
+```powershell
+fnm env --use-on-cd --shell power-shell | Out-String | Invoke-Expression
+```
+
+```
+fnm list              # what is installed
+fnm install 24        # add a version
+fnm use 24            # switch this shell
+fnm default 24        # switch new shells
+```
+
+The old Node 22.11 MSI is still in `C:\Program Files\nodejs` and is harmless — fnm comes
+first on PATH. Uninstall it from Add/Remove Programs whenever you like.
+
+Do not work around this by adding a `@rolldown/binding-*` package to `dependencies` by
+hand. It forces the binary past the engine gate, so it looks like a fix, but the
+package is platform-locked (`os: ["win32"]`) and a hard dependency with a mismatched
+`os` fails the whole install with `EBADPLATFORM` — which means it builds on your
+machine and breaks every Linux CI and deploy. Fix the Node version instead.
+
+## Deploying
+
+Vercel auto-detects Vite, but `vercel.json` states it anyway so the project settings
+cannot drift: framework `vite`, build `npm run build`, output `dist`, install `npm ci`,
+plus a long cache header on the fingerprinted `/assets` files. `engines.node` decides
+the build image's Node version, and it has to stay at or above the floor in the section
+above or the build dies on a missing native binding.
+
+Nothing platform-specific belongs in `package.json`. The lockfile already carries every
+rolldown and lightningcss binary for every platform as an optional dependency, so npm
+picks the right one on whatever machine runs the install.
+
 ## Notes
 
 - Verified with headless Chromium at 1440 / 1280 / 834 / 390 px and in reduced-motion
   mode: no console errors, no horizontal overflow, no broken images.
-- `playwright` is in `devDependencies` purely for `scripts/perf.mjs`. Nothing in the
-  site needs it — `npm remove playwright playwright-core` if you want it gone.
-- `@rolldown/binding-win32-x64-msvc` is pinned in `devDependencies`. Vite 8 needs that
-  native binary and npm did not pull it in on its own on this machine; if you move the
-  project to macOS or Linux, delete it and reinstall so the right binding is fetched.
-- Node 22.11 is installed here and Vite prints a warning asking for 22.12+. Builds and
-  dev both work, but upgrading Node clears the warning.
+- `scripts/perf.mjs` needs Playwright, which is deliberately *not* a dependency — it
+  would only slow the deploy install down. The script tells you how to add it.

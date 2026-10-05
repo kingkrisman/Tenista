@@ -12,7 +12,16 @@
  * gets. The style counts underneath are the useful part: they are the things
  * that actually cost money when they multiply.
  */
-import { chromium } from 'playwright'
+// Playwright is intentionally NOT a dependency of this project — it is only
+// needed to run this probe, and keeping it out of package.json keeps the
+// Vercel install lean. Install it on demand: npm i -D playwright
+let chromium
+try {
+  ;({ chromium } = await import('playwright'))
+} catch {
+  console.error('This probe needs Playwright:\n\n  npm i -D playwright\n  npx playwright install chromium\n')
+  process.exit(1)
+}
 
 const URL = process.argv[2] || 'http://localhost:4174/'
 
