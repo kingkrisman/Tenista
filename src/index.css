@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --edge: clamp(16px, 3.2vw, 48px);
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  body {
+    @apply bg-smoke text-ink font-sans antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Lenis */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  ::selection {
+    background: #D8F24B;
+    color: #0B0B0D;
+  }
+
+  /* Hide native cursor only where a custom one is drawn */
+  @media (hover: hover) and (pointer: fine) {
+    body.has-cursor,
+    body.has-cursor * {
+      cursor: none !important;
+    }
+  }
+
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}
+
+@layer components {
+  .edge {
+    padding-left: var(--edge);
+    padding-right: var(--edge);
+  }
+
+  .display {
+    @apply font-display font-semibold tracking-tightest leading-[0.86];
+  }
+
+  .eyebrow {
+    @apply text-[11px] uppercase tracking-[0.18em] font-medium;
+  }
+
+  /* Frosted look with no backdrop-filter — safe to use on many elements at
+     once, including ones that move. */
+  .glass {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.17), rgba(255, 255, 255, 0.09));
+    border: 1px solid rgba(255, 255, 255, 0.22);
+  }
+
+  /* Dark scrim version, for captions that sit on top of photographs. */
+  .glass-scrim {
+    background: linear-gradient(180deg, rgba(8, 18, 38, 0.52), rgba(8, 18, 38, 0.66));
+    border: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  /* Opt-in real blur. backdrop-filter is the most expensive effect on the
+     page, so only a couple of static elements are allowed to use it. */
+  .glass-blur {
+    backdrop-filter: blur(10px) saturate(135%);
+    -webkit-backdrop-filter: blur(10px) saturate(135%);
+  }
+
+  .glass-dark {
+    background: rgba(10, 30, 70, 0.55);
+    backdrop-filter: blur(10px) saturate(135%);
+    -webkit-backdrop-filter: blur(10px) saturate(135%);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+  }
+
+  /* Clipping mask used by line-by-line text reveals */
+  .line-mask {
+    overflow: hidden;
+    display: block;
+  }
+}
+
+@layer utilities {
+  /* Static on purpose. This started as a 500% x 500% layer running a
+     stepped transform animation forever; measured on the built page, that
+     animation alone doubled median frame time during scroll (33.3ms vs
+     16.8ms). A still grain layer costs essentially nothing and reads the
+     same at 3.5% opacity. */
+  .grain {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 60;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .text-stroke {
+    -webkit-text-stroke: 1.2px currentColor;
+    color: transparent;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
